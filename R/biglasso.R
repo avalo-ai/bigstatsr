@@ -27,7 +27,10 @@ summaries <- function(X, y_diff.train, ind.train, ind.col, ind.sets, K,
 
   n.sets      <- length(ind.train) - table(ind.sets)
   center.sets <- sweep(SUM_X, 1, n.sets, '/')
-  scale.sets  <- sqrt(sweep(SUM_XX, 1, n.sets, '/') - center.sets^2)
+  scale.sets  <- try(sqrt(sweep(SUM_XX, 1, n.sets, “/”) - center.sets^2))
+  if(“try-error” %in% class(scale.sets)){
+    scale.sets<-sweep(SUM_XX, 1, n.sets, “/”) - center.sets^2
+  }
   keep        <- (colSums(scale.sets > 1e-6) == K)
   resid.sets  <- (SUM_XY - sweep(center.sets, 1, SUM_Y, '*')) /
     sweep(scale.sets, 1, n.sets, '*')
@@ -313,7 +316,7 @@ COPY_biglasso_main <- function(X, y.train, ind.train, ind.col, covar.train,
     ## Merge summaries
     center <- do.call('c', lapply(list_summaries, function(x) x[["center"]][ic, ]))[keep]
     scale  <- do.call('c', lapply(list_summaries, function(x) x[["scale"]][ic, ]))[keep]
-    resid  <- do.call('c', lapply(list_summaries, function(x) x[["resid"]][ic, ]))[keep]
+    resid  <- do.call('c', lapply(list_, function(x) x[["resid"]][ic, ]))[keep]
     # keep.covar <- summaries.covar$keep ## should all be TRUE
     center <- c(center, summaries.covar[["center"]][ic, ])
     scale  <- c(scale,  summaries.covar[["scale"]][ic, ])
